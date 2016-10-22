@@ -9,6 +9,7 @@ import PIL
 
 import qi
 
+from democall import DemoCall
 
 class SandBox(object):
     def __init__(self, app):
@@ -28,6 +29,12 @@ class SandBox(object):
         image = self.video_device.getImageRemote(camera_handle)
 
         print image
+
+        try:
+            raw_input("Presser entree pour demarrer la demo d'appel")
+        finally:
+            self.DemoCall = DemoCall(app)
+            self.DemoCall.raiseHRAnomaly(1)
 
         # TODO : Save in a file
 

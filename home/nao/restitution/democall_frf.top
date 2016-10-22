@@ -1,0 +1,15 @@
+topic: ~DemoCall()
+language: frf
+include: lexicon_frf.top
+
+concept:(byeoutput) ^rand["Aurevoir !" "Bonne journée !" "Bye bye !"]
+concept:(byeinput) ["Aurevoir" "Bonne journée" "Tchao"  "Chao" "Bisous" "Bye bye" "Bye" "ciao" "à la prochaine" "Kenavo"]
+concept:(quavezvous) ["{Qu'avez-vous} {détecté}"]
+
+u:(~byeinput) ~byeoutput ^gotoReactivate(exit)
+u:(e:HR/anomaly) ^gotoReactivate(main)
+
+proposal:%main Bonjour docteur je m'appelle Pepper je m'occupe de la surveillance de Monsieur X. \pau=500\ Depuis quelques minutes sa fréquence cardiaque me parrait anormal.
+    u1:(~quavezvous) Sa fréquence cardiaque me parrait basse, calculée à 42 par minutes. \pau=250\ Je viens à l'instant de vous transmettre le dossier du patient.
+
+proposal: %exit $DemoCall/exit=1
