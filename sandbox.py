@@ -54,15 +54,16 @@ class SandBox(object):
             x_max = max(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
             y_min = min(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
             y_max = max(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
-            print "xmin: %d\nx_max: %d\ny_min: %d\ny_max: %d" % (x_min, x_max, y_min, y_max)
-            for x in range(x_min, x_max):
-                for y in range(y_min, y_max):
-                    if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
-                                           self.mouth_pixels[0]):
-                        image[0].append(values[i + 0])
-                        image[1].append(values[i + 1])
-                        image[2].append(values[i + 2])
-                        i += 3
+            print "xmin: %d - x_max: %d - y_min: %d - y_max: %d" % (x_min, x_max, y_min, y_max)
+            if not sum([x_min, x_max, y_min, y_max]) == 0:
+                for x in range(x_min, x_max):
+                    for y in range(y_min, y_max):
+                        if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
+                                               self.mouth_pixels[0]):
+                            image[0].append(values[i + 0])
+                            image[1].append(values[i + 1])
+                            image[2].append(values[i + 2])
+                            i += 3
         stop_time = time.time()
         print "Time taken: " + str(stop_time - start_time)
         return image
@@ -73,18 +74,18 @@ class SandBox(object):
         right_eye = face_info[4]
         mouth = face_info[8]
         # [left(x,y),right(x,y)]
-        self.left_eye_pixels = [(-round(left_eye[4]*self.x_rad_to_pix_ratio)+self.width/2,
-                            round(left_eye[5]*self.y_rad_to_pix_ratio)+self.height/2),
-                           (-round(left_eye[2]*self.x_rad_to_pix_ratio)+self.width/2,
-                            round(left_eye[3]*self.y_rad_to_pix_ratio)+self.height/2)]
-        self.right_eye_pixels = [(-round(right_eye[2]*self.x_rad_to_pix_ratio)+self.width/2,
-                             round(right_eye[3]*self.y_rad_to_pix_ratio)+self.height/2),
-                            (-round(right_eye[4]*self.x_rad_to_pix_ratio)+self.width/2,
-                             round(right_eye[5]*self.y_rad_to_pix_ratio)+self.height/2)]
-        self.mouth_pixels = [(-round(mouth[0]*self.x_rad_to_pix_ratio)+self.width/2,
-                         round(mouth[1]*self.y_rad_to_pix_ratio)+self.height/2),
-                        (-round(mouth[2]*self.x_rad_to_pix_ratio)+self.width/2,
-                         round(mouth[3]*self.y_rad_to_pix_ratio)+self.height/2)]
+        self.left_eye_pixels = [(self.width-int(left_eye[4]*self.x_rad_to_pix_ratio+self.width/2),
+                            int(left_eye[5]*self.y_rad_to_pix_ratio+self.height/2)),
+                           (self.width-int(left_eye[2]*self.x_rad_to_pix_ratio+self.width/2),
+                            int(left_eye[3]*self.y_rad_to_pix_ratio+self.height/2))]
+        self.right_eye_pixels = [(self.width-int(right_eye[2]*self.x_rad_to_pix_ratio+self.width/2),
+                             int(right_eye[3]*self.y_rad_to_pix_ratio+self.height/2)),
+                            (self.width-int(right_eye[4]*self.x_rad_to_pix_ratio+self.width/2),
+                             int(right_eye[5]*self.y_rad_to_pix_ratio+self.height/2))]
+        self.mouth_pixels = [(self.width-int(mouth[0]*self.x_rad_to_pix_ratio+self.width/2),
+                         int(mouth[1]*self.y_rad_to_pix_ratio+self.height/2)),
+                        (self.width-int(mouth[2]*self.x_rad_to_pix_ratio+self.width/2),
+                         int(mouth[3]*self.y_rad_to_pix_ratio+self.height/2))]
 
         image = self.get_interest_zones()
         print 'Done :'
