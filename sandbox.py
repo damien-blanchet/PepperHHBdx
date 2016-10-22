@@ -27,15 +27,18 @@ class SandBox(object):
         self.faceDetectionSubscriber = self.memory.subscriber("FaceDetected")
         self.id_face_detected = self.faceDetectionSubscriber.signal.connect(self.on_face_detected)
 
-        self.face_detection_handle = self.face_detection.subscribe('SandBox')
+        self.face_detection_handle = self.face_detection.subscribe('SandBox', 200, 0)
         self.camera_handle = self.video_device.subscribeCamera('SandBox', 0, 1, 13, 15)
 
         self.width = 320
         self.height = 240
-        image = [[], [], []]
         self.x_rad_to_pix_ratio = self.width/0.9983
         self.y_rad_to_pix_ratio = self.height/0.7732
 
+        self.run()
+
+    def get_interest_zones(self):
+        image = [[], [], []]
         result = self.video_device.getImageRemote(self.camera_handle)
         start_time = time.time()
 
@@ -47,21 +50,17 @@ class SandBox(object):
             # translate value to mat
             values = list(result[6])
             i = 0
-            for y in range(result[0]):
-                for x in range(result[1]):
+            for x in range(result[0]):
+                for y in range(result[1]):
+                    if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
+                                           self.mouth_pixels[0]):
                         image[0].append(values[i + 0])
                         image[1].append(values[i + 1])
                         image[2].append(values[i + 2])
                         i += 3
-
         stop_time = time.time()
-        print "Time taken: " + str(stop_time-start_time)
-        print len(image[0])
-        print image[0][0:3200]
-        print image[1][0:3200]
-        # open('/home/alexis/Bureau/test.bmp', 'w').write(image)
-
-        self.run()
+        print "Time taken: " + str(stop_time - start_time)
+        return image
 
     def on_face_detected(self, value):
         face_info = value[1][0][1]
@@ -69,18 +68,24 @@ class SandBox(object):
         right_eye = face_info[4]
         mouth = face_info[8]
         # [left(x,y),right(x,y)]
-        self.left_eye_pixels = [(round(left_eye[4]*self.x_rad_to_pix_ratio)+self.width/2,
+        self.left_eye_pixels = [(-round(left_eye[4]*self.x_rad_to_pix_ratio)+self.width/2,
                             round(left_eye[5]*self.y_rad_to_pix_ratio)+self.height/2),
-                           (round(left_eye[2]*self.x_rad_to_pix_ratio)+self.width/2,
+                           (-round(left_eye[2]*self.x_rad_to_pix_ratio)+self.width/2,
                             round(left_eye[3]*self.y_rad_to_pix_ratio)+self.height/2)]
-        self.ight_eye_pixels = [(round(right_eye[2]*self.x_rad_to_pix_ratio)+self.width/2,
+        self.right_eye_pixels = [(-round(right_eye[2]*self.x_rad_to_pix_ratio)+self.width/2,
                              round(right_eye[3]*self.y_rad_to_pix_ratio)+self.height/2),
-                            (round(right_eye[4]*self.x_rad_to_pix_ratio)+self.width/2,
+                            (-round(right_eye[4]*self.x_rad_to_pix_ratio)+self.width/2,
                              round(right_eye[5]*self.y_rad_to_pix_ratio)+self.height/2)]
-        self.mouth_pixels = [(round(mouth[0]*self.x_rad_to_pix_ratio)+self.width/2,
+        self.mouth_pixels = [(-round(mouth[0]*self.x_rad_to_pix_ratio)+self.width/2,
                          round(mouth[1]*self.y_rad_to_pix_ratio)+self.height/2),
-                        (round(mouth[2]*self.x_rad_to_pix_ratio)+self.width/2,
+                        (-round(mouth[2]*self.x_rad_to_pix_ratio)+self.width/2,
                          round(mouth[3]*self.y_rad_to_pix_ratio)+self.height/2)]
+
+        image = self.get_interest_zones()
+        print 'Done :'
+        print len(image[0])
+        print len(image[1])
+        print len(image[2])
 
     # args : ((x,y),(x,y),(x,y))
     def scalar_product(self, test_point, first_point, second_point):
