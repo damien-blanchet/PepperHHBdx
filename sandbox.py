@@ -5,7 +5,6 @@ import argparse
 import sys
 import time
 import logging
-import PIL
 
 import qi
 
@@ -22,14 +21,88 @@ class SandBox(object):
         self.logger.info("Initialisation du main !")
 
         self.video_device = session.service('ALVideoDevice')
+        self.face_detection = session.service('ALFaceDetection')
+        self.memory = session.service('ALMemory')
 
-        camera_handle = self.video_device.subscribeCamera('SandBox', 0, 11, 2, 15)
+        self.faceDetectionSubscriber = self.memory.subscriber("FaceDetected")
+        self.id_face_detected = self.faceDetectionSubscriber.signal.connect(self.on_face_detected)
 
-        image = self.video_device.getImageRemote(camera_handle)
+        self.face_detection_handle = self.face_detection.subscribe('SandBox', 200, 0)
+        self.camera_handle = self.video_device.subscribeCamera('SandBox', 0, 1, 13, 15)
 
-        print image
+        self.width = 320
+        self.height = 240
+        self.x_rad_to_pix_ratio = self.width/0.9983
+        self.y_rad_to_pix_ratio = self.height/0.7732
 
-        # TODO : Save in a file
+        self.run()
+
+    def get_interest_zones(self):
+        image = [[], [], []]
+        result = self.video_device.getImageRemote(self.camera_handle)
+        start_time = time.time()
+
+        if result is None:
+            print 'cannot capture.'
+        elif result[6] is None:
+            print 'no image data string.'
+        else:
+            # translate value to mat
+            values = list(result[6])
+            i = 0
+            x_min = min(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
+            x_max = max(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
+            y_min = min(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
+            y_max = max(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
+            print "xmin: %d - x_max: %d - y_min: %d - y_max: %d" % (x_min, x_max, y_min, y_max)
+            if not sum([x_min, x_max, y_min, y_max]) == 0:
+                for x in range(x_min, x_max):
+                    for y in range(y_min, y_max):
+                        if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
+                                               self.mouth_pixels[0]):
+                            image[0].append(values[i + 0])
+                            image[1].append(values[i + 1])
+                            image[2].append(values[i + 2])
+                            i += 3
+        stop_time = time.time()
+        print "Time taken: " + str(stop_time - start_time)
+        return image
+
+    def on_face_detected(self, value):
+        face_info = value[1][0][1]
+        left_eye = face_info[3]
+        right_eye = face_info[4]
+        mouth = face_info[8]
+        # [left(x,y),right(x,y)]
+        self.left_eye_pixels = [(self.width-int(left_eye[4]*self.x_rad_to_pix_ratio+self.width/2),
+                            int(left_eye[5]*self.y_rad_to_pix_ratio+self.height/2)),
+                           (self.width-int(left_eye[2]*self.x_rad_to_pix_ratio+self.width/2),
+                            int(left_eye[3]*self.y_rad_to_pix_ratio+self.height/2))]
+        self.right_eye_pixels = [(self.width-int(right_eye[2]*self.x_rad_to_pix_ratio+self.width/2),
+                             int(right_eye[3]*self.y_rad_to_pix_ratio+self.height/2)),
+                            (self.width-int(right_eye[4]*self.x_rad_to_pix_ratio+self.width/2),
+                             int(right_eye[5]*self.y_rad_to_pix_ratio+self.height/2))]
+        self.mouth_pixels = [(self.width-int(mouth[0]*self.x_rad_to_pix_ratio+self.width/2),
+                         int(mouth[1]*self.y_rad_to_pix_ratio+self.height/2)),
+                        (self.width-int(mouth[2]*self.x_rad_to_pix_ratio+self.width/2),
+                         int(mouth[3]*self.y_rad_to_pix_ratio+self.height/2))]
+
+        image = self.get_interest_zones()
+        print 'Done :'
+        print len(image[0])
+        print len(image[1])
+        print len(image[2])
+
+    # args : ((x,y),(x,y),(x,y))
+    def scalar_product(self, test_point, first_point, second_point):
+        return (test_point[0] - second_point[0]) * (first_point[1] - second_point[1]) \
+               - (first_point[0] - second_point[0]) * (test_point[1] - second_point[1])
+
+    def is_in_triangle(self, test_point, A, B, C):
+        test_1 = self.scalar_product(test_point, A, B) > 0
+        test_2 = self.scalar_product(test_point, B, C) > 0
+        test_3 = self.scalar_product(test_point, C, A) > 0
+        return (test_1 == test_2) and (test_2 == test_3)
 
     def run(self):
         """
@@ -41,6 +114,8 @@ class SandBox(object):
                 time.sleep(1)
         except KeyboardInterrupt:
             self.logger.info("Interrupted by user, stopping Scheduler")
+            self.video_device.unsubscribe(self.camera_handle)
+            self.face_detection.unsubscribe('SandBox')
             sys.exit(0)
 
 
