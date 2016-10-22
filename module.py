@@ -28,15 +28,16 @@ timeArray = []
 
 dateDebut = time.time ()
 
+
 def main():
 
         start_time = time.time()
         ion()
         fig = plt.figure()
-        plt.axis([0, 10, 0, 100])
+        plt.axis([0,  10,  0,  100])
         fig.suptitle("Cardio-frequency")
-        subplt = fig.add_subplot(1, 1, 1)
-        line1, = subplt.plot([], [], 'r-')
+        subplt = fig.add_subplot(1,  1,  1)
+        line1,  = subplt.plot([],  [],  'r-')
         buffer_window = 230
 
         freq_record = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -45,6 +46,12 @@ def main():
             for i in range(0, len(bouchon_rgb)) :
                 fftresult = parse_RGB(len(bouchon_rgb[i][0]), bouchon_rgb[i])
                 freq = frequencyExtract(fftresult, 15)
+            # for i in range(len(bouchon_rgb)) :
+            #     # Computing
+            #     fftresult = parse_RGB(buffer_window,  bouchon_rgb[i])
+            #     freq = frequencyExtract(fftresult,  15)
+
+                # Plotting
                 freq_record.append(freq)
                 dataHistory.append(freq_record.pop(0))
                 line1.set_ydata(freq_record)
@@ -52,18 +59,26 @@ def main():
                 fig.canvas.draw()
                 plt.pause(0.01)
 
+            # subplt.draw()
+            print("La frequence cardiaque est : ",  freq)
+            # s = raw_input()
+            # print time_record
+            # print freq_record
+
+
 def parse_RGB(buffer_window, sample):
-        X = np.ndarray(shape = (3, buffer_window), buffer= np.array(sample))
+        X = np.ndarray(shape = (3,  buffer_window),  buffer= np.array(sample))
         X = normalize_matrix(X)
         ICA = jade.main(X)
         signalFFT = parse_ICA_results(ICA)
         return signalFFT
 
+
 def parse_ICA_results(ICA):
 
-        red = np.squeeze(np.asarray(ICA[:, 0])).tolist()
-        green = np.squeeze(np.asarray(ICA[:, 1])).tolist()
-        blue = np.squeeze(np.asarray(ICA[:, 2])).tolist()
+        red = np.squeeze(np.asarray(ICA[:,  0])).tolist()
+        green = np.squeeze(np.asarray(ICA[:,  1])).tolist()
+        blue = np.squeeze(np.asarray(ICA[:,  2])).tolist()
         
         red = (np.hamming(len(red)) * red)
         green = (np.hamming(len(green)) * green)
@@ -73,7 +88,7 @@ def parse_ICA_results(ICA):
         green = np.absolute(np.square(np.fft.irfft(green))).astype(float).tolist()
         blue = np.absolute(np.square(np.fft.irfft(blue))).astype(float).tolist()
 
-        power_ratio = [0, 0, 0]
+        power_ratio = [0,  0,  0]
         power_ratio[0] = np.sum(red)/np.amax(red)
         power_ratio[1] = np.sum(green)/np.amax(green)
         power_ratio[2] = np.sum(blue)/np.amax(blue)
@@ -87,6 +102,7 @@ def parse_ICA_results(ICA):
 
         return signals
 
+
 def normalize_matrix(matrix):
 
         for array in matrix:
@@ -97,6 +113,7 @@ def normalize_matrix(matrix):
                         array[i] = ((array[i] - average_of_array)/std_dev)
         return matrix
 
+
 def normalize_array(array):
 
         average_of_array = np.mean(array)
@@ -106,7 +123,8 @@ def normalize_array(array):
                 array[i] = ((array[i] - average_of_array)/std_dev)
         return array
 
-def frequencyExtract(fftArray, framerate):
+
+def frequencyExtract(fftArray,  framerate):
         
         p2 = []
         freqs = []
@@ -120,23 +138,24 @@ def frequencyExtract(fftArray, framerate):
         for i in range(medium):
             freqs.append(i * frameRate)
 
-        for i in xrange(-(lenFftArray/2) >> 0, 0):
+        for i in xrange(-(lenFftArray/2) >> 0,  0):
             p2.append(i * frameRate)
 
         freqs.append(p2)
 
-        return filterFreq(fftArray, freqs, framerate)
+        return filterFreq(fftArray,  freqs,  framerate)
 
-def filterFreq(fftArray, freqs, framerate) :
+
+def filterFreq(fftArray,  freqs,  framerate) :
     
     normalizedFreqs = []
     filteredFreqBin = []
 
-    freqObj = zip(freqs, fftArray)
+    freqObj = zip(freqs,  fftArray)
 
     for i in range(len(freqObj)) :
         freq = freqObj[i][0]
-        if ((freq > 0.80) and (freq < 3)) :
+        if (freq > 0.80) and (freq < 3) :
             normalizedFreqs.append(abs(freqObj[i][1])**2)
             filteredFreqBin.append((freq)/1)
     
@@ -144,6 +163,7 @@ def filterFreq(fftArray, freqs, framerate) :
     freq_in_hertz = filteredFreqBin[idx]
     
     return freq_in_hertz * 60
+
 
 def animate(i):
    xar = []
