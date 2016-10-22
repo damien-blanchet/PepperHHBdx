@@ -29,12 +29,12 @@ class SandBox(object):
         ion()
         self.start_time = time.time()
         self.fig = plt.figure()
-        plt.axis([0, 10, 0, 100])
+        plt.axis([0, 1, 0, 220])
         self.fig.suptitle("Cardio-frequency")
         self.subplt = self.fig.add_subplot(1, 1, 1)
         self.line1, = self.subplt.plot([], [], 'b-')
-        self.freq_record = [0] * 100
-        self.time_record = [float(f) / 10 for f in range(100)]
+        self.freq_record = [0.0] * 100
+        self.time_record = [0] * 100
         self.data_set = [[], [], []]
         self.data_history = []
         self.data_times = []
@@ -130,11 +130,15 @@ class SandBox(object):
             fftresult = parse_RGB(len(self.data_set[0]), self.data_set)
             freq = frequencyExtract(fftresult, 15)
             self.freq_record.append(freq)
+            self.time_record.append(time.time() - self.start_time)
             self.data_history.append(self.freq_record.pop(0))
+            self.time_record.pop(0)
             self.line1.set_ydata(self.freq_record)
             self.line1.set_xdata(self.time_record)
+            ax = plt.gca()
+            ax.set_xlim([self.time_record[0], self.time_record[-1]])
             self.fig.canvas.draw()
-            plt.pause(0.01)
+            plt.pause(0.05)
             self.data_set = [self.data_set[0][10:], self.data_set[1][10:], self.data_set[2][10:]]
 
     # args : ((x,y),(x,y),(x,y))
