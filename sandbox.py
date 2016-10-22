@@ -50,8 +50,13 @@ class SandBox(object):
             # translate value to mat
             values = list(result[6])
             i = 0
-            for x in range(result[0]):
-                for y in range(result[1]):
+            x_min = min(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
+            x_max = max(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
+            y_min = min(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
+            y_max = max(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
+            print "xmin: %d\nx_max: %d\ny_min: %d\ny_max: %d" % (x_min, x_max, y_min, y_max)
+            for x in range(x_min, x_max):
+                for y in range(y_min, y_max):
                     if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
                                            self.mouth_pixels[0]):
                         image[0].append(values[i + 0])
