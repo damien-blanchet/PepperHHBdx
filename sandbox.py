@@ -49,10 +49,10 @@ class SandBox(object):
         self.id_face_detected = self.faceDetectionSubscriber.signal.connect(self.on_face_detected)
 
         self.face_detection_handle = self.face_detection.subscribe('SandBox', 200, 0)
-        self.camera_handle = self.video_device.subscribeCamera('SandBox', 0, 1, 13, 15)
+        self.camera_handle = self.video_device.subscribeCamera('SandBox', 0, 0, 13, 15)
 
-        self.width = 320
-        self.height = 240
+        self.width = 160
+        self.height = 120
         self.x_rad_to_pix_ratio = self.width / 0.9983
         self.y_rad_to_pix_ratio = self.height / 0.7732
 
@@ -66,7 +66,6 @@ class SandBox(object):
         # finally:
         # self.DemoCall = DemoCall(app)
         # self.DemoCall.raiseHRAnomaly(1)
-
 
         self.run()
 
@@ -96,7 +95,6 @@ class SandBox(object):
                             image[1].append(values[i + 1])
                             image[2].append(values[i + 2])
                             i += 3
-        # stop_time = time.time()
         return image
 
     def on_face_detected(self, value):
@@ -148,27 +146,32 @@ class SandBox(object):
         test_3 = self.scalar_product(test_point, C, A) > 0
         return (test_1 == test_2) and (test_2 == test_3)
 
+    def get_frame(self):
+        print time.time()
+        if self.mouth_pixels is not None:
+            image = self.get_interest_zones()
+            if image[0]:
+                self.add_image_to_data_set(image)
+
     def run(self):
         """
         Main application loop. Waits for manual interruption.
         """
         self.logger.info("Starting Scheduler")
+        get_frame_task = qi.PeriodicTask()
+        get_frame_task.setCallback(self.get_frame)
+        get_frame_task.compensateCallbackTime(True)
+        get_frame_task.setUsPeriod(60000)
+        get_frame_task.start(True)
         try:
             while True:
-                if self.mouth_pixels is not None:
-                    timestamp = time.time()
-                    image = self.get_interest_zones()
-                    if image[0]:
-                        self.add_image_to_data_set(image)
-                        print time.time()-timestamp
-                else:
-                    time.sleep(0.02)
+                time.sleep(1)
         except KeyboardInterrupt:
             self.logger.info("Interrupted by user, stopping Scheduler")
+            get_frame_task.stop()
             self.video_device.unsubscribe(self.camera_handle)
             self.face_detection.unsubscribe('SandBox')
             sys.exit(0)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
