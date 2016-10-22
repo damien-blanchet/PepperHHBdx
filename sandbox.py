@@ -32,6 +32,7 @@ class SandBox(object):
         plt.axis([0, 1, 0, 220])
         self.fig.suptitle("Cardio-frequency")
         self.subplt = self.fig.add_subplot(1, 1, 1)
+        self.ax = plt.gca()
         self.line1, = self.subplt.plot([], [], 'b-')
         self.freq_record = [0.0] * 100
         self.time_record = [0] * 100
@@ -95,6 +96,7 @@ class SandBox(object):
                             image[1].append(values[i + 1])
                             image[2].append(values[i + 2])
                             i += 3
+        print len(image[0])
         return image
 
     def on_face_detected(self, value):
@@ -122,8 +124,8 @@ class SandBox(object):
         self.data_set[1].append(sum(image[1]) / float(len(image[1])))
         self.data_set[2].append(sum(image[2]) / float(len(image[2])))
         self.data_times.append(time.time())
-        print len(self.data_set[0])
-        if len(self.data_set[0]) >= 50:
+        # print len(self.data_set[0])
+        if len(self.data_set[0]) >= 200:
             print 'Analyzing'
             fftresult = parse_RGB(len(self.data_set[0]), self.data_set)
             freq = frequencyExtract(fftresult, 15)
@@ -133,11 +135,10 @@ class SandBox(object):
             self.time_record.pop(0)
             self.line1.set_ydata(self.freq_record)
             self.line1.set_xdata(self.time_record)
-            ax = plt.gca()
-            ax.set_xlim([self.time_record[0], self.time_record[-1]])
+            self.ax.set_xlim([self.time_record[0], self.time_record[-1]])
             self.fig.canvas.draw()
             plt.pause(0.05)
-            self.data_set = [self.data_set[0][10:], self.data_set[1][10:], self.data_set[2][10:]]
+            self.data_set = [self.data_set[0][20:], self.data_set[1][20:], self.data_set[2][20:]]
 
     # args : ((x,y),(x,y),(x,y))
     def scalar_product(self, test_point, first_point, second_point):
@@ -151,7 +152,7 @@ class SandBox(object):
         return (test_1 == test_2) and (test_2 == test_3)
 
     def get_frame(self):
-        print time.time()
+        # print time.time()
         if self.mouth_pixels is not None:
             image = self.get_interest_zones()
             if image[0]:
