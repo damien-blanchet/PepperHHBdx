@@ -35,6 +35,10 @@ class SandBox(object):
         self.x_rad_to_pix_ratio = self.width/0.9983
         self.y_rad_to_pix_ratio = self.height/0.7732
 
+        self.left_eye_pixels = None
+        self.right_eye_pixels = None
+        self.mouth_pixels = None
+
         self.run()
 
     def get_interest_zones(self):
