@@ -9,6 +9,11 @@ import logging
 import qi
 
 from democall import DemoCall
+from module import saveDatas, loadDatas, parse_RGB, parse_ICA_results, normalize_matrix, normalize_array, frequencyExtract, filterFreq, animate
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import ion
+
+import matplotlib.animation as animation
 
 class SandBox(object):
     def __init__(self, app):
@@ -17,7 +22,19 @@ class SandBox(object):
         self.app = app
         self.app.start()
         session = self.app.session
-
+		
+        # Plot initialisation
+        ion()
+        self.start_time = time.time()
+        self.fig = plt.figure()
+        plt.axis([0, 10, 0, 100])
+        self.fig.suptitle("Cardio-frequency")
+        self.subplt = fig.add_subplot(1, 1, 1)
+        self.line1, = subplt.plot([], [], 'b-')
+        self.freq_record = [0] * 100
+        self.time_record = [float(f) / 10 for f in range(100)]
+        self.data_set = [[], [], []]
+        self.data_times = []
         self.logger = logging.getLogger('SandBox')  # TODO : Fix the logger
         self.logger.info("Initialisation du main !")
 
@@ -40,11 +57,12 @@ class SandBox(object):
         self.right_eye_pixels = None
         self.mouth_pixels = None
 
-        try:
-            raw_input("Presser entree pour demarrer la demo d'appel")
-        finally:
-            self.DemoCall = DemoCall(app)
-            self.DemoCall.raiseHRAnomaly(1)
+        ## uncomment to set "demo" mode
+        # try:
+            # raw_input("Presser entree pour demarrer la demo d'appel")
+        # finally:
+            # self.DemoCall = DemoCall(app)
+            # self.DemoCall.raiseHRAnomaly(1)
 
 
         self.run()
@@ -100,10 +118,24 @@ class SandBox(object):
                          int(mouth[3]*self.y_rad_to_pix_ratio+self.height/2))]
 
         image = self.get_interest_zones()
-        print 'Done :'
-        print len(image[0])
-        print len(image[1])
-        print len(image[2])
+        self.data_set[0].append(sum(image[0]) / float(len(image[0])))
+        self.data_set[1].append(sum(image[1]) / float(len(image[1])))
+        self.data_set[2].append(sum(image[2]) / float(len(image[2])))
+        self.data_times.append(time.time())
+        if len(self.data_set) >= 150:            
+            fftresult = parse_RGB(len(self.data_set[0]), data_set)
+            freq = frequencyExtract(fftresult, 15)
+            self.freq_record.append(freq)
+            self.dataHistory.append(freq_record.pop(0))
+            self.line1.set_ydata(freq_record)
+            self.line1.set_xdata(time_record)
+            self.fig.canvas.draw()
+            plt.pause(0.01)
+            self.data_set = [self.data_set[0][50:], self.data_set[1][50:], self.data_set[2][50:]]
+        # print 'Done :'
+        # print len(image[0])
+        # print len(image[1])
+        # print len(image[2])
 
     # args : ((x,y),(x,y),(x,y))
     def scalar_product(self, test_point, first_point, second_point):
