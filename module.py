@@ -141,7 +141,7 @@ def normalize_array(array):
 
         for i in range(len(array)):
                 array[i] = ((array[i] - average_of_array)/std_dev)
-        return array
+        return array50
 
 
 def frequencyExtract(fftArray,  framerate):
