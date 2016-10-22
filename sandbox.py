@@ -9,11 +9,13 @@ import logging
 import qi
 
 from democall import DemoCall
-from module import saveDatas, loadDatas, parse_RGB, parse_ICA_results, normalize_matrix, normalize_array, frequencyExtract, filterFreq, animate
+from module import saveDatas, loadDatas, parse_RGB, parse_ICA_results, normalize_matrix, normalize_array, \
+    frequencyExtract, filterFreq, animate
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import ion
 
 import matplotlib.animation as animation
+
 
 class SandBox(object):
     def __init__(self, app):
@@ -22,18 +24,19 @@ class SandBox(object):
         self.app = app
         self.app.start()
         session = self.app.session
-		
+
         # Plot initialisation
         ion()
         self.start_time = time.time()
         self.fig = plt.figure()
         plt.axis([0, 10, 0, 100])
         self.fig.suptitle("Cardio-frequency")
-        self.subplt = fig.add_subplot(1, 1, 1)
-        self.line1, = subplt.plot([], [], 'b-')
+        self.subplt = self.fig.add_subplot(1, 1, 1)
+        self.line1, = self.subplt.plot([], [], 'b-')
         self.freq_record = [0] * 100
         self.time_record = [float(f) / 10 for f in range(100)]
         self.data_set = [[], [], []]
+        self.data_history = []
         self.data_times = []
         self.logger = logging.getLogger('SandBox')  # TODO : Fix the logger
         self.logger.info("Initialisation du main !")
@@ -50,8 +53,8 @@ class SandBox(object):
 
         self.width = 320
         self.height = 240
-        self.x_rad_to_pix_ratio = self.width/0.9983
-        self.y_rad_to_pix_ratio = self.height/0.7732
+        self.x_rad_to_pix_ratio = self.width / 0.9983
+        self.y_rad_to_pix_ratio = self.height / 0.7732
 
         self.left_eye_pixels = None
         self.right_eye_pixels = None
@@ -59,10 +62,10 @@ class SandBox(object):
 
         ## uncomment to set "demo" mode
         # try:
-            # raw_input("Presser entree pour demarrer la demo d'appel")
+        # raw_input("Presser entree pour demarrer la demo d'appel")
         # finally:
-            # self.DemoCall = DemoCall(app)
-            # self.DemoCall.raiseHRAnomaly(1)
+        # self.DemoCall = DemoCall(app)
+        # self.DemoCall.raiseHRAnomaly(1)
 
 
         self.run()
@@ -70,7 +73,7 @@ class SandBox(object):
     def get_interest_zones(self):
         image = [[], [], []]
         result = self.video_device.getImageRemote(self.camera_handle)
-        start_time = time.time()
+        # start_time = time.time()
 
         if result is None:
             print 'cannot capture.'
@@ -84,7 +87,6 @@ class SandBox(object):
             x_max = max(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
             y_min = min(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
             y_max = max(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
-            print "xmin: %d - x_max: %d - y_min: %d - y_max: %d" % (x_min, x_max, y_min, y_max)
             if not sum([x_min, x_max, y_min, y_max]) == 0:
                 for x in range(x_min, x_max):
                     for y in range(y_min, y_max):
@@ -94,8 +96,7 @@ class SandBox(object):
                             image[1].append(values[i + 1])
                             image[2].append(values[i + 2])
                             i += 3
-        stop_time = time.time()
-        print "Time taken: " + str(stop_time - start_time)
+        # stop_time = time.time()
         return image
 
     def on_face_detected(self, value):
@@ -104,38 +105,41 @@ class SandBox(object):
         right_eye = face_info[4]
         mouth = face_info[8]
         # [left(x,y),right(x,y)]
-        self.left_eye_pixels = [(self.width-int(left_eye[4]*self.x_rad_to_pix_ratio+self.width/2),
-                            int(left_eye[5]*self.y_rad_to_pix_ratio+self.height/2)),
-                           (self.width-int(left_eye[2]*self.x_rad_to_pix_ratio+self.width/2),
-                            int(left_eye[3]*self.y_rad_to_pix_ratio+self.height/2))]
-        self.right_eye_pixels = [(self.width-int(right_eye[2]*self.x_rad_to_pix_ratio+self.width/2),
-                             int(right_eye[3]*self.y_rad_to_pix_ratio+self.height/2)),
-                            (self.width-int(right_eye[4]*self.x_rad_to_pix_ratio+self.width/2),
-                             int(right_eye[5]*self.y_rad_to_pix_ratio+self.height/2))]
-        self.mouth_pixels = [(self.width-int(mouth[0]*self.x_rad_to_pix_ratio+self.width/2),
-                         int(mouth[1]*self.y_rad_to_pix_ratio+self.height/2)),
-                        (self.width-int(mouth[2]*self.x_rad_to_pix_ratio+self.width/2),
-                         int(mouth[3]*self.y_rad_to_pix_ratio+self.height/2))]
+        self.left_eye_pixels = [(self.width - int(left_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
+                                 int(left_eye[5] * self.y_rad_to_pix_ratio + self.height / 2)),
+                                (self.width - int(left_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
+                                 int(left_eye[3] * self.y_rad_to_pix_ratio + self.height / 2))]
+        self.right_eye_pixels = [(self.width - int(right_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
+                                  int(right_eye[3] * self.y_rad_to_pix_ratio + self.height / 2)),
+                                 (self.width - int(right_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
+                                  int(right_eye[5] * self.y_rad_to_pix_ratio + self.height / 2))]
+        self.mouth_pixels = [(self.width - int(mouth[0] * self.x_rad_to_pix_ratio + self.width / 2),
+                              int(mouth[1] * self.y_rad_to_pix_ratio + self.height / 2)),
+                             (self.width - int(mouth[2] * self.x_rad_to_pix_ratio + self.width / 2),
+                              int(mouth[3] * self.y_rad_to_pix_ratio + self.height / 2))]
 
         image = self.get_interest_zones()
-        self.data_set[0].append(sum(image[0]) / float(len(image[0])))
-        self.data_set[1].append(sum(image[1]) / float(len(image[1])))
-        self.data_set[2].append(sum(image[2]) / float(len(image[2])))
-        self.data_times.append(time.time())
-        if len(self.data_set) >= 150:            
-            fftresult = parse_RGB(len(self.data_set[0]), data_set)
-            freq = frequencyExtract(fftresult, 15)
-            self.freq_record.append(freq)
-            self.dataHistory.append(freq_record.pop(0))
-            self.line1.set_ydata(freq_record)
-            self.line1.set_xdata(time_record)
-            self.fig.canvas.draw()
-            plt.pause(0.01)
-            self.data_set = [self.data_set[0][50:], self.data_set[1][50:], self.data_set[2][50:]]
-        # print 'Done :'
-        # print len(image[0])
-        # print len(image[1])
-        # print len(image[2])
+        if image[0]:
+            self.data_set[0].append(sum(image[0]) / float(len(image[0])))
+            self.data_set[1].append(sum(image[1]) / float(len(image[1])))
+            self.data_set[2].append(sum(image[2]) / float(len(image[2])))
+            self.data_times.append(time.time())
+            print len(self.data_set[0])
+            if len(self.data_set[0]) >= 50:
+                print 'Analyzing'
+                fftresult = parse_RGB(len(self.data_set[0]), self.data_set)
+                freq = frequencyExtract(fftresult, 15)
+                self.freq_record.append(freq)
+                self.data_history.append(self.freq_record.pop(0))
+                self.line1.set_ydata(self.freq_record)
+                self.line1.set_xdata(self.time_record)
+                self.fig.canvas.draw()
+                plt.pause(0.01)
+                self.data_set = [self.data_set[0][50:], self.data_set[1][50:], self.data_set[2][50:]]
+                # print 'Done :'
+                # print len(image[0])
+                # print len(image[1])
+                # print len(image[2])
 
     # args : ((x,y),(x,y),(x,y))
     def scalar_product(self, test_point, first_point, second_point):
