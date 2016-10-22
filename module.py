@@ -29,8 +29,20 @@ timeArray = []
 dateDebut = time.time ()
 
 
-def main():
+def saveDatas(datas):
+    with open('data.txt', 'w') as outfile:
+            json.dump(datas, outfile)
+            outfile.close()
 
+def loadDatas():
+    with open('data.txt', 'r') as intputfile:
+            data = json.load(intputfile)
+            intputfile.close()
+            return data
+        
+def main():
+        saveDatas(bouchon_rgb)
+        data = loadDatas()
         start_time = time.time()
         ion()
         fig = plt.figure()
@@ -43,8 +55,8 @@ def main():
         freq_record = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         time_record = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         while True:
-            for i in range(0, len(bouchon_rgb)) :
-                fftresult = parse_RGB(len(bouchon_rgb[i][0]), bouchon_rgb[i])
+            for i in range(0, len(data)) :
+                fftresult = parse_RGB(len(data[i][0]), data[i])
                 freq = frequencyExtract(fftresult, 15)
             # for i in range(len(bouchon_rgb)) :
             #     # Computing
@@ -87,6 +99,14 @@ def parse_ICA_results(ICA):
         red = np.absolute(np.square(np.fft.irfft(red))).astype(float).tolist()
         green = np.absolute(np.square(np.fft.irfft(green))).astype(float).tolist()
         blue = np.absolute(np.square(np.fft.irfft(blue))).astype(float).tolist()
+
+        #fig = plt.figure(i+2)
+                #plt.plot(blue)
+                #plt.plot(red)
+                #plt.plot(green)
+                #plt.ylabel('some numbers')
+                #fig.savefig('fig-'+str(i)+'.png')
+                #plt.close(fig)
 
         power_ratio = [0,  0,  0]
         power_ratio[0] = np.sum(red)/np.amax(red)
