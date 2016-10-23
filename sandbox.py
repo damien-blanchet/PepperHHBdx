@@ -13,8 +13,9 @@ from module import saveDatas, loadDatas, parse_RGB, parse_ICA_results, normalize
     frequencyExtract, filterFreq, animate
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import ion
-
 import matplotlib.animation as animation
+
+from PIL import Image
 
 import numpy as np
 
@@ -42,6 +43,7 @@ class SandBox(object):
         self.data_times = []
         self.logger = logging.getLogger('SandBox')  # TODO : Fix the logger
         self.logger.info("Initialisation du main !")
+        self.counter = 0
 
         self.video_device = session.service('ALVideoDevice')
         self.face_detection = session.service('ALFaceDetection')
@@ -83,6 +85,8 @@ class SandBox(object):
         else:
             # translate value to mat
             values = list(result[6])
+            # print values
+            self.save_picture(values)
             i = 0
             # Left cheek
             x1_min = min(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
@@ -96,14 +100,16 @@ class SandBox(object):
             y2_max = max(self.right_eye_pixels[0][1], self.right_eye_pixels[1][1], self.mouth_pixels[1][1])
             if not sum([x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max]) == 0:
                 x_range = range(x2_min, x2_max)
-                x_range.extend(range(x1_min, x1_max))
+                # x_range.extend(range(x1_min, x1_max))
                 y_range = range(y2_min, y2_max)
-                y_range.extend(range(y1_min, y1_max))
+                # y_range.extend(range(y1_min, y1_max))
                 for x in x_range:
                     for y in y_range:
-                        if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
-                                            self.mouth_pixels[0]) or self.is_in_triangle((x, y),
-                                            self.right_eye_pixels[0], self.right_eye_pixels[1], self.mouth_pixels[1]):
+                        # if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
+                                            # self.mouth_pixels[0]) or self.is_in_triangle((x, y),
+                                            # self.right_eye_pixels[0], self.right_eye_pixels[1], self.mouth_pixels[1]):
+                        if self.is_in_triangle((x, y),
+                                            self.right_eye_pixels[0], self.right_eye_pixels[1], self.mouth_pixels[1]):                    
                             image[0].append(values[i + 0])
                             image[1].append(values[i + 1])
                             image[2].append(values[i + 2])
@@ -119,17 +125,17 @@ class SandBox(object):
             mouth = face_info[8]
             # [left(x,y),right(x,y)]
             self.left_eye_pixels = [(int(left_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
-                                     int(left_eye[5] * self.y_rad_to_pix_ratio + self.height / 2)),
+                                     int(left_eye[5] * self.y_rad_to_pix_ratio + self.height / 2) + 10),
                                     (int(left_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
-                                     int(left_eye[3] * self.y_rad_to_pix_ratio + self.height / 2))]
+                                     int(left_eye[3] * self.y_rad_to_pix_ratio + self.height / 2) + 10)]
             self.right_eye_pixels = [(int(right_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
-                                      int(right_eye[3] * self.y_rad_to_pix_ratio + self.height / 2)),
+                                      int(right_eye[3] * self.y_rad_to_pix_ratio + self.height / 2) + 10),
                                      (int(right_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
-                                      int(right_eye[5] * self.y_rad_to_pix_ratio + self.height / 2))]
+                                      int(right_eye[5] * self.y_rad_to_pix_ratio + self.height / 2) + 10)]
             self.mouth_pixels = [(int(mouth[0] * self.x_rad_to_pix_ratio + self.width / 2),
-                                  int(mouth[1] * self.y_rad_to_pix_ratio + self.height / 2)),
+                                  int(mouth[1] * self.y_rad_to_pix_ratio + self.height / 2) + 5),
                                  (int(mouth[2] * self.x_rad_to_pix_ratio + self.width / 2),
-                                  int(mouth[3] * self.y_rad_to_pix_ratio + self.height / 2))]
+                                  int(mouth[3] * self.y_rad_to_pix_ratio + self.height / 2) + 5)]
 
     def add_image_to_data_set(self, image, measure_time):
         self.data_set[2].append(sum(image[0]) / float(len(image[0])))
@@ -201,6 +207,25 @@ class SandBox(object):
             if image[0]:
                 self.add_image_to_data_set(image, measure_time)
 
+    def save_picture(self, frame):
+        triplets = [(frame[i+2], frame[i+1], frame[i]) for i in range(len(frame) / 3)]
+        # print len(triplets)
+        # triplets = np.array(triplets, dtype=(float, 3))
+        # print triplets.shape
+        # triplets = triplets.reshape((self.width, self.height, 3))
+        # print triplets.shape
+        # im = Image.fromarray(np.array(triplets), mode="RGB")
+         # Create a PIL Image from our pixel array.
+        # im = Image.frombytes("RGB", (self.width, self.height), frame)
+        im = Image.new('RGB', (self.width, self.height))
+        print 'Image created'
+        im.putdata(triplets)
+
+        # Save the image.
+        # im.save("camImage.png", "PNG")
+        im.save("picture_%d.png" % self.counter, "PNG")
+        self.counter += 1
+        
     def run(self):
         """
         Main application loop. Waits for manual interruption.
