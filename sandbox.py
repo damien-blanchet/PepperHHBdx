@@ -16,6 +16,7 @@ from matplotlib.pyplot import ion
 
 import matplotlib.animation as animation
 
+import numpy as np
 
 class SandBox(object):
     def __init__(self, app):
@@ -107,7 +108,7 @@ class SandBox(object):
                             image[1].append(values[i + 1])
                             image[2].append(values[i + 2])
                             i += 3
-        print len(image[0])
+        # print len(image[0])
         return image
 
     def on_face_detected(self, value):
@@ -117,24 +118,25 @@ class SandBox(object):
             right_eye = face_info[4]
             mouth = face_info[8]
             # [left(x,y),right(x,y)]
-            self.left_eye_pixels = [(self.width - int(left_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
+            self.left_eye_pixels = [(int(left_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
                                      int(left_eye[5] * self.y_rad_to_pix_ratio + self.height / 2)),
-                                    (self.width - int(left_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
+                                    (int(left_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
                                      int(left_eye[3] * self.y_rad_to_pix_ratio + self.height / 2))]
-            self.right_eye_pixels = [(self.width - int(right_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
+            self.right_eye_pixels = [(int(right_eye[2] * self.x_rad_to_pix_ratio + self.width / 2),
                                       int(right_eye[3] * self.y_rad_to_pix_ratio + self.height / 2)),
-                                     (self.width - int(right_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
+                                     (int(right_eye[4] * self.x_rad_to_pix_ratio + self.width / 2),
                                       int(right_eye[5] * self.y_rad_to_pix_ratio + self.height / 2))]
-            self.mouth_pixels = [(self.width - int(mouth[0] * self.x_rad_to_pix_ratio + self.width / 2),
+            self.mouth_pixels = [(int(mouth[0] * self.x_rad_to_pix_ratio + self.width / 2),
                                   int(mouth[1] * self.y_rad_to_pix_ratio + self.height / 2)),
-                                 (self.width - int(mouth[2] * self.x_rad_to_pix_ratio + self.width / 2),
+                                 (int(mouth[2] * self.x_rad_to_pix_ratio + self.width / 2),
                                   int(mouth[3] * self.y_rad_to_pix_ratio + self.height / 2))]
 
     def add_image_to_data_set(self, image):
-        self.data_set[0].append(sum(image[0]) / float(len(image[0])))
+        self.data_set[2].append(sum(image[0]) / float(len(image[0])))
         self.data_set[1].append(sum(image[1]) / float(len(image[1])))
-        self.data_set[2].append(sum(image[2]) / float(len(image[2])))
+        self.data_set[0].append(sum(image[2]) / float(len(image[2])))
         self.data_times.append(time.time())
+        # print (self.data_set[0][-1], self.data_set[1][-1], self.data_set[2][-1])
         # print len(self.data_set[0])
         if len(self.data_set[0]) >= 200:
             print 'Analyzing'
@@ -148,11 +150,15 @@ class SandBox(object):
             self.freq_record.pop(0)
             self.time_record.pop(0)
             self.line1.set_ydata(self.freq_record)
+            # xdata = np.linspace(self.time_record[-2], self.time_record[-1], len(self.data_set[0]))
             self.line1.set_xdata(self.time_record)
+            # self.line1.set_xdata(xdata)
             self.ax.set_xlim([self.time_record[0], self.time_record[-1]])
+            # self.ax.set_xlim([self.time_record[-2], self.time_record[-1]])
             self.fig.canvas.draw()
             plt.pause(0.05)
             self.data_set = [self.data_set[0][20:], self.data_set[1][20:], self.data_set[2][20:]]
+            # self.data_set = [[], [], []]
 
     # args : ((x,y),(x,y),(x,y))
     def scalar_product(self, test_point, first_point, second_point):
@@ -169,6 +175,9 @@ class SandBox(object):
         # print time.time()
         if self.mouth_pixels is not None:
             image = self.get_interest_zones()
+            # print self.left_eye_pixels
+            # print self.right_eye_pixels
+            # print self.mouth_pixels
             if image[0]:
                 self.add_image_to_data_set(image)
 
