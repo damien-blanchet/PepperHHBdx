@@ -83,15 +83,26 @@ class SandBox(object):
             # translate value to mat
             values = list(result[6])
             i = 0
-            x_min = min(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
-            x_max = max(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
-            y_min = min(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
-            y_max = max(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
-            if not sum([x_min, x_max, y_min, y_max]) == 0:
-                for x in range(x_min, x_max):
-                    for y in range(y_min, y_max):
+            # Left cheek
+            x1_min = min(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
+            x1_max = max(self.left_eye_pixels[0][0], self.left_eye_pixels[1][0], self.mouth_pixels[0][0])
+            y1_min = min(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
+            y1_max = max(self.left_eye_pixels[0][1], self.left_eye_pixels[1][1], self.mouth_pixels[0][1])
+            # Right cheek
+            x2_min = min(self.right_eye_pixels[0][0], self.right_eye_pixels[1][0], self.mouth_pixels[1][0])
+            x2_max = max(self.right_eye_pixels[0][0], self.right_eye_pixels[1][0], self.mouth_pixels[1][0])
+            y2_min = min(self.right_eye_pixels[0][1], self.right_eye_pixels[1][1], self.mouth_pixels[1][1])
+            y2_max = max(self.right_eye_pixels[0][1], self.right_eye_pixels[1][1], self.mouth_pixels[1][1])
+            if not sum([x1_min, x1_max, y1_min, y1_max, x2_min, x2_max, y2_min, y2_max]) == 0:
+                x_range = range(x2_min, x2_max)
+                x_range.extend(range(x1_min, x1_max))
+                y_range = range(y2_min, y2_max)
+                y_range.extend(range(y1_min, y1_max))
+                for x in x_range:
+                    for y in y_range:
                         if self.is_in_triangle((x, y), self.left_eye_pixels[0], self.left_eye_pixels[1],
-                                               self.mouth_pixels[0]):
+                                            self.mouth_pixels[0]) or self.is_in_triangle((x, y),
+                                            self.right_eye_pixels[0], self.right_eye_pixels[1], self.mouth_pixels[1]):
                             image[0].append(values[i + 0])
                             image[1].append(values[i + 1])
                             image[2].append(values[i + 2])
