@@ -185,7 +185,7 @@ class SandBox(object):
         """
         Main application loop. Waits for manual interruption.
         """
-        self.logger.info("Starting Scheduler")
+        print "Starting RUN Loop..."
         get_frame_task = qi.PeriodicTask()
         get_frame_task.setCallback(self.get_frame)
         get_frame_task.compensateCallbackTime(True)
@@ -220,5 +220,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     my_app = SandBox(qi_app)
-
     my_app.run()
