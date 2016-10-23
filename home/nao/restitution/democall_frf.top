@@ -9,7 +9,7 @@ concept:(quavezvous) ["{Qu'avez-vous} {détecté}"]
 u:(~byeinput) ~byeoutput ^gotoReactivate(exit)
 u:(e:HR/anomaly) ^gotoReactivate(main)
 
-proposal:%main Bonjour docteur je m'appelle Pepper je m'occupe de la surveillance de Monsieur X. \pau=500\ Depuis quelques minutes sa fréquence cardiaque me parrait anormal.
+proposal:%main Bonjour docteur \pau=100\ je m'appelle Pepper \pau=250\ je m'occupe de la surveillance de Monsieur Alfred JOLY. \pau=250\ Depuis quelques minutes sa fréquence cardiaque me parrait anormal.
     u1:(~quavezvous) Sa fréquence cardiaque me parrait basse, calculée à 42 par minutes. \pau=250\ Je viens à l'instant de vous transmettre le dossier du patient.
 
 proposal: %exit $DemoCall/exit=1

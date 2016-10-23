@@ -19,10 +19,10 @@ class DemoCall(object):
         topic_path = "/home/nao/restitution/democall_frf.top"
         # Loading the topic given by the user (absolute path is required)
         topf_path = topic_path.decode('utf-8')
-        topic_name = self.ALDialog.loadTopic(topf_path.encode('utf-8'))
+        self.topic_name = self.ALDialog.loadTopic(topf_path.encode('utf-8'))
         
         # Activating the loaded topic
-        self.ALDialog.activateTopic(topic_name)
+        self.ALDialog.activateTopic(self.topic_name)
     
         # Starting the dialog engine - we need to type an arbitrary string as the identifier
         # We subscribe only ONCE, regardless of the number of topics we have activated
@@ -38,9 +38,9 @@ class DemoCall(object):
         # stopping the dialog engine
         self.ALDialog.unsubscribe('DemoCallDialog')
         # Deactivating the topic
-        self.ALDialog.deactivateTopic(topic_name)
+        self.ALDialog.deactivateTopic(self.topic_name)
 
         # now that the dialog engine is stopped and there are no more activated topics,
         # we can unload our topic and free the associated memory
-        self.ALDialog.unloadTopic(topic_name)
+        self.ALDialog.unloadTopic(self.topic_name)
         exit(0)
