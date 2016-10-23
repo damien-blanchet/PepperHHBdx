@@ -143,16 +143,24 @@ class SandBox(object):
             fft_frequency = 15
             
             # We create an even sample at the frequency at which we're going to perform the fft analysis
-            sampled = np.linspace(self.data_times[0], self.data_times[-1], fft_frequency * (self.data_times[1] - self.data_times[0]))
-            interp_values = [np.interp(sampled, self.data_set[i], self.data_times) for i in range(3)]
+            # print "sample number: %d\ntime1: %f\ntime2: %f" % (fft_frequency * (self.data_times[-1] - self.data_times[0]), self.data_times[-1], self.data_times[0])
+            sampled = np.linspace(self.data_times[0], self.data_times[-1], fft_frequency * (self.data_times[-1] - self.data_times[0]))
+            interp_values = [np.interp(sampled, self.data_times, self.data_set[i]) for i in range(3)]
+            # print sampled
+            print self.data_set
+            # print self.data_times
+            print interp_values
             
             # We use this sample to estimate the pulse
             fftresult = parse_RGB(len(interp_values[0]), interp_values)
+            # fftresult = parse_RGB(len(self.data_set[0]), self.data_set)
             freq = frequencyExtract(fftresult, fft_frequency)
+            print freq
             self.data_history.append(freq)
             self.time_record.append(time.time() - self.start_time)
             averaging_capacity = min(5, len(self.data_history))
             smoothed_data_point = sum(self.data_history[-averaging_capacity:]) / float(averaging_capacity)
+            print smoothed_data_point
             self.freq_record.append(smoothed_data_point)
             self.freq_record.pop(0)
             self.time_record.pop(0)
@@ -163,8 +171,12 @@ class SandBox(object):
             self.ax.set_xlim([self.time_record[0], self.time_record[-1]])
             # self.ax.set_xlim([self.time_record[-2], self.time_record[-1]])
             self.fig.canvas.draw()
+            self.fig.savefig("res_pulse.png")
             plt.pause(0.05)
             self.data_set = [self.data_set[0][20:], self.data_set[1][20:], self.data_set[2][20:]]
+            self.data_times = self.data_times[20:]
+            # self.data_set = [[], [], []]
+            # self.data_times = []
             # self.data_set = [[], [], []]
 
     # args : ((x,y),(x,y),(x,y))
@@ -181,7 +193,7 @@ class SandBox(object):
     def get_frame(self):
         # print time.time()
         if self.mouth_pixels is not None:
-            measure_time = time.time()
+            measure_time = time.time() - self.start_time
             image = self.get_interest_zones()
             # print self.left_eye_pixels
             # print self.right_eye_pixels
