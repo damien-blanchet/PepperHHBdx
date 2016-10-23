@@ -1,11 +1,7 @@
 #! /usr/bin/env python
 # -*- encoding: UTF-8 -*-
 
-import argparse
 import sys
-import time
-import logging
-import PIL
 
 import qi
 
@@ -36,7 +32,7 @@ class DemoCall(object):
         self.exit_service.signal.connect(self.exit)
 		
     def raiseHRAnomaly(self,value):
-	self.ALMemory.raiseEvent("HR/anomaly",value)
+		self.ALMemory.raiseEvent("HR/anomaly",value)
 
     def exit(self, value):
         # stopping the dialog engine
