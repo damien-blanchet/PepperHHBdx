@@ -208,7 +208,7 @@ class SandBox(object):
                 self.add_image_to_data_set(image, measure_time)
 
     def save_picture(self, frame):
-        triplets = [(frame[i+2], frame[i+1], frame[i]) for i in range(len(frame) / 3)]
+        triplets = [(frame[3*i+2], frame[3*i+1], frame[3*i]) for i in range(len(frame) / 3)]
         # print len(triplets)
         # triplets = np.array(triplets, dtype=(float, 3))
         # print triplets.shape
