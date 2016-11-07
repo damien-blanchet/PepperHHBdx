@@ -131,17 +131,24 @@ class SandBox(object):
                                  (int(mouth[2] * self.x_rad_to_pix_ratio + self.width / 2),
                                   int(mouth[3] * self.y_rad_to_pix_ratio + self.height / 2))]
 
-    def add_image_to_data_set(self, image):
+    def add_image_to_data_set(self, image, measure_time):
         self.data_set[2].append(sum(image[0]) / float(len(image[0])))
         self.data_set[1].append(sum(image[1]) / float(len(image[1])))
         self.data_set[0].append(sum(image[2]) / float(len(image[2])))
-        self.data_times.append(time.time())
+        self.data_times.append(measure_time)
         # print (self.data_set[0][-1], self.data_set[1][-1], self.data_set[2][-1])
         # print len(self.data_set[0])
         if len(self.data_set[0]) >= 200:
             print 'Analyzing'
-            fftresult = parse_RGB(len(self.data_set[0]), self.data_set)
-            freq = frequencyExtract(fftresult, 15)
+            fft_frequency = 15
+            
+            # We create an even sample at the frequency at which we're going to perform the fft analysis
+            sampled = np.linspace(self.data_times[0], self.data_times[-1], fft_frequency * (self.data_times[1] - self.data_times[0]))
+            interp_values = [np.interp(sampled, self.data_set[i], self.data_times) for i in range(3)]
+            
+            # We use this sample to estimate the pulse
+            fftresult = parse_RGB(len(interp_values[0]), interp_values)
+            freq = frequencyExtract(fftresult, fft_frequency)
             self.data_history.append(freq)
             self.time_record.append(time.time() - self.start_time)
             averaging_capacity = min(5, len(self.data_history))
@@ -174,12 +181,13 @@ class SandBox(object):
     def get_frame(self):
         # print time.time()
         if self.mouth_pixels is not None:
+            measure_time = time.time()
             image = self.get_interest_zones()
             # print self.left_eye_pixels
             # print self.right_eye_pixels
             # print self.mouth_pixels
             if image[0]:
-                self.add_image_to_data_set(image)
+                self.add_image_to_data_set(image, measure_time)
 
     def run(self):
         """
