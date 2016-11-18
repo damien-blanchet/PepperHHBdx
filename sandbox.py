@@ -8,7 +8,6 @@ import logging
 
 import qi
 
-from democall import DemoCall
 from module import saveDatas, loadDatas, parse_RGB, parse_ICA_results, normalize_matrix, normalize_array, \
     frequencyExtract, filterFreq, animate
 import matplotlib.pyplot as plt
@@ -61,13 +60,6 @@ class SandBox(object):
         self.left_eye_pixels = None
         self.right_eye_pixels = None
         self.mouth_pixels = None
-
-        ## uncomment to set "demo" mode
-        # try:
-        # raw_input("Presser entree pour demarrer la demo d'appel")
-        # finally:
-        # self.DemoCall = DemoCall(app)
-        # self.DemoCall.raiseHRAnomaly(1)
 
         self.run()
 
